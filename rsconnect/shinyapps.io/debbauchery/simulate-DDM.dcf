@@ -1,0 +1,12 @@
+name: simulate-DDM
+title:
+username:
+account: debbauchery
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4205029
+bundleId: 4656826
+url: https://dbrhln.shinyapps.io/simulate-DDM/
+when: 1622375836.54488
+asMultiple: FALSE
+asStatic: FALSE
