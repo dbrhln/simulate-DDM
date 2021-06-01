@@ -61,15 +61,15 @@ ui <- fluidPage(
                          c("Histogram" = TRUE,
                            "Density" = FALSE)),
 
-            actionButton("btn", "Click for Reference Parameters"),
-            bsTooltip(id="btn", title="Drift rate, v = 0.7</br> Boundary separation, a = 3 </br> Start Point Bias, b = 0.5 </br> Note: Reference plots are in grey",
-                      trigger="click",placement="bottom")
+            #actionButton("btn", "Click for Reference Parameters"),
+            #bsTooltip(id="btn", title="Drift rate, v = 0.7</br> Boundary separation, a = 3 </br> Start Point Bias, b = 0.5 </br> Note: Reference plots are in grey",
+            #          trigger="click",placement="bottom")
         ),
 
         # Show a plot of the generated distribution
         mainPanel(
             tabsetPanel(
-                tabPanel("Plot",shinycssloaders::withSpinner(plotOutput("distPlot"))),
+                tabPanel("Plot",shinycssloaders::withSpinner(plotOutput("distPlot")), tableOutput('table')),
                 tabPanel("Information",shinycssloaders::withSpinner(uiOutput("info")))
             )
         )
@@ -78,13 +78,20 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
+    
+    res <- reactive({
+        suppressWarnings(sim_paths(v=input$drift,a=input$boundary,b=input$bias,nsim=input$nsims))
+    })
+    
     output$distPlot <- renderPlot({
         # generate bins based on input$bins from ui.R
-        res <- suppressWarnings(sim_paths(v=input$drift,a=input$boundary,b=input$bias,nsim=input$nsims))
-        plot_ddmsim(res,histogram=input$hist)
+        plot_ddmsim(res(),histogram=input$hist)
 
     })
+    output$table <- renderTable({
+        res_table <- gen_table(v=input$drift,a=input$boundary,b=input$bias,nsim=input$nsims,res())
+        res_table %<>% rename("Simulation"="ID","%A"="Prob_A","Median RT A (ms)"="Med_RT_A", "%B"="Prob_B","Median RT B (ms)"="Med_RT_B")},
+                                align='c',bordered=TRUE)
     output$info <- renderUI({
         withMathJax(helpText('
         INTRODUCTION

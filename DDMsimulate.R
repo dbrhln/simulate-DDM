@@ -151,8 +151,9 @@ plot_ddmsim <- function(res,histogram=TRUE){
   col1_alt <- ifelse(nsim<120,"black","white")
   col2 <- alpha("#2c3e50",alpha=.7) #dark blue to match shiny flatly theme
   col2_op <- "#2c3e50"
-  col2_alt <- ifelse(nsim<120, "#2c3e50","#6e94ba")
-  col2_txt <- "#537fab"
+  col2_alt <- ifelse(nsim<120,"black","white") 
+  col2_txt <- "#5b80a4"
+  col2_line <- "#364d63"
 
   if (histogram==TRUE){
     p_upper <- res$upper_bnd %>%
@@ -195,13 +196,6 @@ plot_ddmsim <- function(res,histogram=TRUE){
       theme_void() + theme(legend.position="none")
   }
 
-
-  #p_ddm <- matplot(time,t(X),type="l", col=alpha("darkgray",alpha=0.7),xaxt="n",main=2)
-res1 = res
-ggplot(res1$df, aes(x=time,y=V,group=grp,col=ref)) +
-  geom_line(aes(col=factor(ref))) +
-  scale_color_manual(values = c("black","red"))
-
   #plot
   bnd <- res$bnd
   start <- res$start
@@ -209,16 +203,17 @@ ggplot(res1$df, aes(x=time,y=V,group=grp,col=ref)) +
   p_ddm <- res$df %>%
     ggplot(aes(x=time,y=V,group=grp,col=as.factor(ref))) +
     geom_line(aes(col=factor(ref)), alpha=0.2) + scale_color_manual(values=c(col1,col2))+ theme(legend.position = "none") +
-    scale_y_continuous(limits = c(0, 4), oob = scales::oob_keep) +
+    scale_y_continuous(limits = c(0, 4), oob = scales::oob_keep, breaks=c(bnd[2],start[2]),
+                       labels=c(expression(a[0]),expression(a[0]*b[0]))) +
     scale_x_continuous(limits = c(0, 600), oob = scales::oob_keep) +
     geom_hline(yintercept=bnd[2], color = "black", size=0.7) + #reference boundary
-    geom_hline(yintercept=bnd[1], color = col2_op,size=0.7) + #boundary
+    geom_hline(yintercept=bnd[1], color = col2_line,size=0.7) + #boundary
     geom_hline(yintercept=start[2], linetype="dashed", color = "black", size=0.7) + #reference start point
-    geom_hline(yintercept=start[1], linetype="dashed", color = col2_op, size=0.7) + #start point
+    geom_hline(yintercept=start[1], linetype="dashed", color = col2_line, size=0.7) + #start point
     theme_classic() + theme(axis.ticks.x=element_blank(),
-                            axis.ticks.y=element_blank(),
+                            #axis.ticks.y=element_blank(),
                             axis.text.x=element_blank(),
-                            axis.text.y=element_blank(),
+                            axis.text.y=element_text(size=14),
                             axis.title.y=element_blank(),
                             axis.line.y=element_line(size=0.2),
                             axis.title.x=element_blank(),
@@ -230,11 +225,12 @@ ggplot(res1$df, aes(x=time,y=V,group=grp,col=ref)) +
     annotate("text",x=600,y=0,label=paste0("(",round(pctB,1),"%)"),colour=col2_txt) +
     annotate("text",x=530,y=4-0.15,label=paste0("Response A (",round(pctA0,0),"%)")) +
     annotate("text",x=600,y=4-0.15,label=paste0("(",round(pctA,0),"%)"),colour=col2_txt) +
-    annotate("text",x=-24,y=bnd[2]+0.2,label="a") + # Add boundary label
-    annotate("text",x=-20,y=start[2]+.15,label="a*b") + # Add start point label
+    #annotate("text",x=-24,y=bnd[2]+0.2,label="a[0]",parse=TRUE) + # Add boundary label
+    #annotate("text",x=-20,y=start[2]+.15,label="a[0]*b[0]", parse=TRUE) + # Add start point label
     annotate("segment", x = 0, xend = 50, y = start[1], yend = start[1]+v[1]*0.5, # Add drift rate labels + vectors
              colour = col2_alt, size = 0.8, arrow = arrow(length = unit(0.3, "cm"))) +
-    annotate("text",x=25,y=start[2]+0.15+v[2]*0.25,label="v", size=5,colour=col1_alt) +
+    #annotate("text",x=25,y=start[1]+0.15+v[1]*0.25,label="v", parse=TRUE, size=5,colour=col2_alt) +
+    annotate("text",x=25,y=start[2]+0.18+v[2]*0.25,label="v[0]", parse=TRUE, size=5,colour=col1_alt) +
     annotate("segment", x = 0, xend = 50, y = start[2], yend = start[2]+v[2]*0.5,
              colour = col1_alt, size = 0.8, arrow = arrow(length = unit(0.3, "cm"))) +
     annotate("segment", x = 520, xend = 600, y = start[2]-0.2, yend = start[2]-0.2, # Add time arrow on x axis
@@ -248,4 +244,31 @@ ggplot(res1$df, aes(x=time,y=V,group=grp,col=ref)) +
       widths = c(1),
       heights = c(1,2,1)
   )
+}
+
+## Generate a data frame of parameter values and summary stats to display in a table in the web app
+
+gen_table <- function(v,a,b,nsim,res){
+  pctA <- as.character(round(nrow(res$upper_bnd[res$upper_bnd$ref==1,])/nsim*100))
+  pctB <- as.character(round(nrow(res$lower_bnd[res$lower_bnd$ref==1,])/nsim*100))
+  
+  pctA0 <- as.character(round(nrow(res$upper_bnd[res$upper_bnd$ref==0,])/nsim*100))
+  pctB0 <- as.character(round(nrow(res$lower_bnd[res$lower_bnd$ref==0,])/nsim*100))
+  
+  medA <- as.character(round(mean(res$upper_bnd[res$upper_bnd$ref==1,1])))
+  medB <- as.character(round(mean(res$lower_bnd[res$lower_bnd$ref==1,1])))
+  
+  medA0 <- as.character(round(mean(res$upper_bnd[res$upper_bnd$ref==0,1])))
+  medB0 <- as.character(round(mean(res$lower_bnd[res$lower_bnd$ref==0,1])))
+  
+  res <- data.frame(ID = c("Reference","User"),
+                    v = c(0.7,v),
+                    a = c(3,a),
+                    b = c(0.5,b),
+                    Prob_A = c(pctA0,pctA),
+                    Med_RT_A = c(medA0,medA),
+                    Prob_B = c(pctB0,pctB),
+                    Med_RT_B = c(medB0,medB))
+
+  return(res)
 }
