@@ -5,8 +5,8 @@ account: debbauchery
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4205029
-bundleId: 4664035
+bundleId: 4717303
 url: https://dbrhln.shinyapps.io/simulate-DDM/
-when: 1622540998.18623
+when: 1623725809.92425
 asMultiple: FALSE
 asStatic: FALSE

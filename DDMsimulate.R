@@ -77,8 +77,9 @@ sim_paths <- function(v=0.6,a=3,b=0.5,s=0.1,nsim=100,tmax=6){
   v0 <- 0.7
   a0 <- 3
   b0 <- 0.5
+  start0 <- a0*b0
   X0 <- matrix(rnorm(n=nsim*(length(time)-1),sd=s),nrow=nsim,ncol=length(time)-1)
-  X0 <- cbind(rep(start,nsim),X0)
+  X0 <- cbind(rep(start0,nsim),X0)
   X0 <- t(apply(X0,1,cumsum))
   X0 <- rep.row(v0*time, n=nsim) + X0
 
